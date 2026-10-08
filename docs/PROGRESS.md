@@ -2,7 +2,7 @@
 
 > Réplica de RTS estilo Age of Empires IV (mecânicas, HUD, visual 3D), 100% original em arte/áudio/nome.
 
-## Estado atual: FASE 0 — quase fechada
+## Estado atual: FASE 0 FECHADA — Fase 1 em andamento (4 builders em paralelo)
 
 - Correção do usuário (sessão atual): **Haiku 5.5 EXISTE neste harness** via
   provider `opencodex`, model `Merge/anthropic-claude-haiku-5-5` (sonda de confirmação retornou `OK`).
@@ -34,12 +34,14 @@
 - [x] Primeiros testes (catraca): `tests/unit/dataset-integrity.test.ts` (5 testes) e
       `tests/e2e/smoke.spec.ts`.
 
-### Pendente imediato (fechar Fase 0)
+### Fase 0 — pronta (evidências)
 
-- [ ] Gate verde local → commit/push → CI verde na main.
-- [ ] Deploy produção: `pnpm deploy` (wrangler pages, projeto crown-of-ages).
-- [ ] e2e smoke contra a URL de produção publicada (0 erros de console).
-- [ ] Tag `v0.1`.
+- [x] Gate verde local (lint/typecheck/5 unit/build).
+- [x] CI verde na main: run 37837080969 (`verify` + `e2e-local` success).
+- [x] Produção: https://crown-of-ages.pages.dev (HTTP 200) — deploy wrangler pages.
+- [x] e2e smoke contra produção: 1 passed, 0 erros de console.
+- [x] Tag `v0.1` pushada.
+- [x] Contrato de tipos: `src/sim/types.ts` (costura dos builders).
 
 
 ## Bloqueios
