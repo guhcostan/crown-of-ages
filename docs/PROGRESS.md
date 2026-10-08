@@ -2,7 +2,7 @@
 
 > Réplica de RTS estilo Age of Empires IV (mecânicas, HUD, visual 3D), 100% original em arte/áudio/nome.
 
-## Estado atual: FASE 0 EM ANDAMENTO — pesquisa + scaffold
+## Estado atual: FASE 0 — quase fechada
 
 - Correção do usuário (sessão atual): **Haiku 5.5 EXISTE neste harness** via
   provider `opencodex`, model `Merge/anthropic-claude-haiku-5-5` (sonda de confirmação retornou `OK`).
@@ -11,6 +11,36 @@
   - O agente principal (Lead) não pode selecionar o próprio modelo nesta sessão
     (roda `step-5-preview-free`); divergência registrada para o relatório final conforme
     instrução do usuário ("siga com o step-5-preview e registre a divergência — NÃO pare").
+  - Alerta do usuário: o endpoint do step-5-preview sofre rate limit (429); em falha,
+    esperar e retomar de onde parou.
+
+### Feito na Fase 0
+
+- [x] Scaffold: package.json, tsconfig (strict), vite, eslint, prettier, playwright, wrangler,
+      CI (lint/typecheck/unit/build/e2e-local/e2e-prod).
+- [x] **Bug de CI corrigido** (run 37821845979 vermelho): `strictPort` inexistente no
+      webServer do Playwright + `declare global` sem `export {}` em `src/main.ts`.
+      `pnpm exec tsc --noEmit` = 0 erros localmente. (pnpm 11 local exige allow de build do
+      esbuild — resolvido em `pnpm-workspace.yaml` local, fora do git.)
+- [x] Dataset oficial `aoe4world/data` (english+french) vendorizado em `data/aoe4/` com
+      proveniência (`data/aoe4/README.upstream.md`, upstream commit b2cd3822).
+- [x] `docs/SPEC.md` mestre (1066+ linhas): unidades, construções, techs, landmarks, eras,
+      contadores, civilizações, §7.1 economia via dump `aoemods/attrib` (taxas de coleta,
+      carga, fazenda, local sagrado, maravilha, idades, mercado), §8 HUD/câmera/paleta medidos
+      em screenshots reais, §9 lacunas restantes.
+- [x] Referências visuais: `docs/reference/aoe4/ss-01..10` (oficiais Steam) +
+      `docs/reference/hud/` (2 partidas reais com HUD completo).
+- [x] Repositório github.com/guhcostan/crown-of-ages criado e pushado.
+- [x] Primeiros testes (catraca): `tests/unit/dataset-integrity.test.ts` (5 testes) e
+      `tests/e2e/smoke.spec.ts`.
+
+### Pendente imediato (fechar Fase 0)
+
+- [ ] Gate verde local → commit/push → CI verde na main.
+- [ ] Deploy produção: `pnpm deploy` (wrangler pages, projeto crown-of-ages).
+- [ ] e2e smoke contra a URL de produção publicada (0 erros de console).
+- [ ] Tag `v0.1`.
+
 
 ## Bloqueios
 

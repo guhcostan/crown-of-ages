@@ -10,3 +10,4 @@ dist-ssr
 .vite
 *.tsbuildinfo
 docs/spec-parts/.tmp
+pnpm-workspace.yaml

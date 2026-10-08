@@ -20,4 +20,7 @@ declare global {
   }
 }
 
+// Torna este arquivo um modulo (para a augmentation global acima ser valida).
+export {};
+
 window.__game = { version: "scaffold", status: "not-implemented" };
