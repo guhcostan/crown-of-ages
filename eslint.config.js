@@ -17,13 +17,23 @@ export default tseslint.config(
     },
   },
   {
-    // A simulacao e pura: nada de Math.random/Date.now (nao-determinismo).
+    // A simulacao e pura: nada de tempo real/aleatoriedade global (nao-determinismo).
+    // Math puro (floor, hypot, min...) e deterministico e permitido.
     files: ["src/sim/**/*.ts"],
     rules: {
       "no-restricted-globals": [
         "error",
-        { name: "Math", message: "Sim deve ser deterministica. Use src/sim/rng.ts (semente fixa)." },
         { name: "Date", message: "Sim deve ser deterministica. Nada de tempo real dentro de src/sim." },
+        { name: "performance", message: "Sim deve ser deterministica. Nada de relogio dentro de src/sim." },
+        { name: "crypto", message: "Sim deve ser deterministica. Use o RNG da partida em src/sim/rng.ts." },
+      ],
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "Math",
+          property: "random",
+          message: "Sim deve ser deterministica. Use o RNG da partida em src/sim/rng.ts.",
+        },
       ],
     },
   },

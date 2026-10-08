@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:4173";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:4174";
 // Quando PLAYWRIGHT_BASE_URL aponta para producao (ou outra URL remota), nao subimos servidor local.
 const useProd = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
@@ -26,8 +26,8 @@ export default defineConfig({
     ? undefined
     : {
         command: "pnpm run build && pnpm run preview",
-        port: 4173,
-        reuseExistingServer: !process.env.CI,
+        port: 4174,
+        reuseExistingServer: false,
         timeout: 120_000,
       },
 });
