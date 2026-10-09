@@ -2,7 +2,40 @@
 
 > Réplica de RTS estilo Age of Empires IV (mecânicas, HUD, visual 3D), 100% original em arte/áudio/nome.
 
-## Estado atual: FASE 0 FECHADA — Fase 1 em andamento (4 builders em paralelo)
+## Estado atual: MARCO JOGÁVEL PRONTO (prioridade do usuário) — tag v0.2
+
+### Evidências (produção https://crown-of-ages.pages.dev)
+
+- [x] CI verde na main (run mais recente: `verify` + `e2e-local` success).
+- [x] Deploy wrangler pages no ar; e2e **12/12 contra a URL de produção**.
+- [x] `tests/e2e/milestone.spec.ts`: **loop completo ponta a ponta** via menu +
+      `window.__game`: menu → partida → aldeões coletando os 4 recursos → casa
+      (+pop) e fazendas → idade 2 por landmark (council-hall) → quartel + 4
+      lanceiros → combate (dano no TC/ unidades do bot) → vitória por destruição
+      + tela de vitória, **0 erros de console**.
+- [x] 133 testes unitários + lint + typecheck + build verdes.
+
+### Bugs corrigidos nesta rodada (integração Lead)
+
+1. Off-by-one na era dos landmarks (dataset: `age` = era de construção; concedida = +1).
+2. Semântica de vitória: humano sem landmark = derrota; eliminar bot = vitória.
+3. Perseguição do combate travava em terreno bloqueado → re-path A*.
+4. **Empate float na fronteira de alcance** (unidades nunca atacavam) → snap final.
+5. Unidades treinadas nasciam sem `sight` → piso de aquisição (10).
+6. Unidades em tile bloqueado travavam para sempre → `unstickUnits` no tick.
+7. `attackMove` não consome a ordem ao chegar (ataca o que aparecer).
+8. e2e local batendo em servidor alheio na porta 4173 → porta própria 4174.
+
+### Próximo (fases restantes da missão)
+
+- [ ] Bots (build order, counter, ataque) — fase 7.
+- [ ] Relíquias, locais sagrados, comércio — fase 6.
+- [ ] Tecnologias (ferraria/universidade/mosteiro) — fase 4 restante.
+- [ ] Muralhas, portões, torres, postos, unidades sobre muralha — fase 3.
+- [ ] French completo/unidades únicas na pratica — fase 5.
+- [ ] Áudio, 60fps/200 unidades, fidelidade fina — fase 9.
+- [ ] Críticos independentes (fidelidade HUD + balanceamento) por fase.
+
 
 - Correção do usuário (sessão atual): **Haiku 5.5 EXISTE neste harness** via
   provider `opencodex`, model `Merge/anthropic-claude-haiku-5-5` (sonda de confirmação retornou `OK`).
