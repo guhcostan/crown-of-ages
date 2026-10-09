@@ -382,8 +382,11 @@
 .hud-cmd-btn {
   width: 44px;
   height: 44px;
-  padding: 0;
-  font-size: 16px;
+  padding: 2px;
+  font-size: 10px;
+  line-height: 1.1;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 /* --- Minimapa: base-direita (losango fixo) ---------------------------------- */

@@ -1,0 +1,88 @@
+/*
+ * victory.css — overlay de vitória/derrota. Mesma paleta do HUD (hud.css):
+ * fundo escuro translúcido, moldura dourada-escura e destaque dourado.
+ * Vitória = dourado/verde; derrota = vermelho escuro.
+ */
+
+.victory-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(5, 8, 16, 0.78);
+  color: #e8e4d8;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.victory-title {
+  margin: 0;
+  font-size: 56px;
+  font-weight: 800;
+}
+
+.victory-screen.is-victory .victory-title {
+  color: #d4af6a;
+  text-shadow: 0 0 18px rgba(212, 175, 106, 0.55);
+}
+
+.victory-screen.is-defeat .victory-title {
+  color: #c0392b;
+  text-shadow: 0 0 18px rgba(192, 57, 43, 0.55);
+}
+
+.victory-screen.is-victory {
+  box-shadow: inset 0 0 120px rgba(58, 180, 81, 0.25);
+}
+
+.victory-screen.is-defeat {
+  box-shadow: inset 0 0 140px rgba(90, 10, 10, 0.55);
+}
+
+.victory-reason,
+.victory-time {
+  margin: 0;
+  font-size: 14px;
+  color: #e8e4d8;
+}
+
+.victory-time {
+  color: #d4af6a;
+  font-weight: 700;
+}
+
+.victory-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.victory-btn {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: #e8e4d8;
+  background: rgba(20, 28, 46, 0.95);
+  border: 1px solid #3a3320;
+  border-radius: 3px;
+  padding: 10px 18px;
+  cursor: pointer;
+  min-width: 170px;
+}
+
+.victory-btn:hover {
+  border-color: #d4af6a;
+  color: #d4af6a;
+}
+
+.victory-btn:focus-visible {
+  outline: 2px solid #d4af6a;
+  outline-offset: 2px;
+}

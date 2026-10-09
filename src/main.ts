@@ -2,13 +2,14 @@
  * main.ts — bootstrap do jogo (integração Lead).
  *
  * Liga os módulos: simulação determinística (@sim), render 3D (@render), cola
- * (@game) e HUD (@ui). Loop de tick fixo (10 Hz) desacoplado do render (rAF).
- * Expõe `window.__game` (contrato em docs/ARCHITECTURE.md §4).
+ * (@game) e UI (@ui: menu, HUD, vitória). Loop de tick fixo (10 Hz) desacoplado
+ * do render (rAF). Expõe `window.__game` (contrato em docs/ARCHITECTURE.md §4).
  */
 import "./style.css";
 import { createGameApi } from "@game/api";
 import { attachInput } from "@game/input";
 import { boxSelect, controlGroupOp, pickAt, type ControlGroupsModel } from "@game/selection";
+import { createSession } from "@game/session";
 import { drawMinimap } from "@render/minimap";
 import { createRenderer } from "@render/scene";
 import { applyCommand } from "@sim/commands";
@@ -16,6 +17,7 @@ import { stepTick } from "@sim/tick";
 import { TICK_SECONDS, type Command, type MatchConfig, type World } from "@sim/types";
 import { createWorld } from "@sim/world";
 import { mountHud } from "@ui/hud";
+import { mountMenu, type SkirmishConfig } from "@ui/menu";
 
 declare global {
   interface Window {
@@ -61,12 +63,13 @@ function configFromUrl(): MatchConfig {
 function main(): void {
   const app = document.getElementById("app");
   if (!app) throw new Error("elemento #app ausente");
+  const appEl = app;
 
-  app.innerHTML = "";
-  app.style.position = "relative";
-  app.style.width = "100%";
-  app.style.height = "100%";
-  app.style.overflow = "hidden";
+  appEl.innerHTML = "";
+  appEl.style.position = "relative";
+  appEl.style.width = "100%";
+  appEl.style.height = "100%";
+  appEl.style.overflow = "hidden";
 
   const canvas = document.createElement("canvas");
   canvas.id = "game-canvas";
@@ -75,17 +78,17 @@ function main(): void {
   canvas.style.width = "100%";
   canvas.style.height = "100%";
   canvas.style.display = "block";
-  app.append(canvas);
+  appEl.append(canvas);
 
   const hudRoot = document.createElement("div");
   hudRoot.style.position = "absolute";
   hudRoot.style.inset = "0";
   hudRoot.style.pointerEvents = "none";
-  app.append(hudRoot);
+  appEl.append(hudRoot);
   const hud = mountHud(hudRoot);
 
-  const width = app.clientWidth || window.innerWidth;
-  const height = app.clientHeight || window.innerHeight;
+  const width = appEl.clientWidth || window.innerWidth;
+  const height = appEl.clientHeight || window.innerHeight;
 
   // -------------------------------------------------------------------------
   // Estado do jogo
@@ -105,12 +108,36 @@ function main(): void {
   });
   window.__game = api;
 
+  // Partida de fundo (a cena 3D fica viva atras do menu).
   api.newMatch(configFromUrl());
 
   const renderer = createRenderer(canvas, width, height);
   hud.setObjectives(api.getState().config);
 
   const world = (): World | null => api.getState();
+
+  // -------------------------------------------------------------------------
+  // Menu + sessão (fluxo: menu -> partida -> vitória)
+  // -------------------------------------------------------------------------
+  const menu = mountMenu(appEl);
+  const session = createSession({
+    api,
+    hud: {
+      update: (s, ids, extra) => hud.update(s, ids, extra),
+      setObjectives: (c) => hud.setObjectives(c),
+      setCommandActions: (actions, cb) => hud.setCommandActions(actions, cb),
+      onIdleVillagerClick: (cb) => hud.onIdleVillagerClick(cb),
+    },
+    menu,
+    getSelection: () => selection,
+    setSelection: (ids) => {
+      selection = ids;
+    },
+    focusOn: (x, z) => renderer.camera.focusOn(x, z),
+    victoryRoot: appEl,
+  });
+  menu.onStart((cfg: SkirmishConfig) => session.start(cfg));
+  menu.show();
 
   // -------------------------------------------------------------------------
   // Minimapa: canvas dentro do container data-hud=minimap
@@ -178,6 +205,25 @@ function main(): void {
   });
   canvas.addEventListener("pointerup", (ev) => {
     if (ev.button === 0 && input.state.dragging) handleBoxSelect();
+  });
+
+  // Aldeão ocioso: seleciona os parados e foca no primeiro.
+  hud.onIdleVillagerClick(() => {
+    const w = world();
+    if (!w) return;
+    const idle = w.entities
+      .filter(
+        (e) =>
+          e.kind === "unit" &&
+          e.type === "villager" &&
+          e.owner === 0 &&
+          (e.orders === undefined || e.orders.length === 0) &&
+          e.gatherTargetId === undefined,
+      )
+      .map((e) => e.id);
+    selection = idle;
+    const first = w.entities.find((e) => e.id === idle[0]);
+    if (first) renderer.camera.focusOn(first.x, first.z);
   });
 
   // -------------------------------------------------------------------------
@@ -257,6 +303,7 @@ function main(): void {
 
     renderer.render(w, 0);
     hud.update(w, selection, { fps, timeMs: w.tick * 100 });
+    session.poll();
 
     if (miniCtx) {
       const cam = renderer.camera.state();
@@ -273,7 +320,6 @@ function main(): void {
     requestAnimationFrame(frame);
   }
 
-  const appEl = app;
   function resize(): void {
     const w = appEl.clientWidth || window.innerWidth;
     const h = appEl.clientHeight || window.innerHeight;

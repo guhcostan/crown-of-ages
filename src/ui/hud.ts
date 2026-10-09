@@ -8,13 +8,28 @@
 import "./hud.css";
 import type { Entity, MapResource, MatchConfig, ResourceKind, World } from "@sim/types";
 
+/** Ação exibida no command card (construir, treinar, landmark ou cancelar). */
+export interface CommandAction {
+  id: string;
+  label: string;
+  kind: "build" | "train" | "landmark" | "cancel";
+  buildingType: string;
+  hotkey?: string;
+  cost?: string;
+}
+
 /** Contrato público do HUD. */
 export interface HudHandle {
   update(snapshot: World, selectionIds: readonly number[], extra: { fps: number; timeMs: number }): void;
   setObjectives(config: MatchConfig): void;
+  /** Substitui o conteúdo do command card; `cb` recebe a ação clicada. */
+  setCommandActions(actions: readonly CommandAction[], cb: (a: CommandAction) => void): void;
   onIdleVillagerClick(cb: () => void): void;
   dispose(): void;
 }
+
+/** Número máximo de botões no command card (grade 3x3). */
+const COMMAND_SLOTS = 9;
 
 /** Jogador controlado pelo humano. */
 const HUMAN = 0;
@@ -176,6 +191,8 @@ export function mountHud(root: HTMLElement): HudHandle {
   const created: HTMLElement[] = [];
   let disposed = false;
   let idleCallback: (() => void) | undefined;
+  let commandCallback: ((a: CommandAction) => void) | undefined;
+  let commandSig = "";
   let config: MatchConfig | undefined;
   let objectiveSig = "";
 
@@ -295,14 +312,22 @@ export function mountHud(root: HTMLElement): HudHandle {
 
   const cmdPanel = make("div", "hud-panel hud-command-card", undefined, { "data-hud": "command-card" });
   bottom.appendChild(cmdPanel);
-  for (let i = 0; i < 9; i += 1) {
+  // Slots fixos (3x3): vazios ficam desabilitados até `setCommandActions` preencher.
+  const cmdButtons: HTMLButtonElement[] = [];
+  for (let i = 0; i < COMMAND_SLOTS; i += 1) {
     const btn = make("button", "hud-btn hud-cmd-btn", "·", {
       type: "button",
       disabled: "",
-      title: "Em breve",
+      title: "Indisponível",
     });
+    btn.addEventListener("click", () => {
+      const action = cmdActions[i];
+      if (action !== undefined) commandCallback?.(action);
+    });
+    cmdButtons.push(btn);
     cmdPanel.appendChild(btn);
   }
+  let cmdActions: readonly CommandAction[] = [];
 
   // --- Minimapa (base-direita) --------------------------------------------
   addPanel(make("div", "hud-panel hud-minimap", undefined, { "data-hud": "minimap" }));
@@ -477,7 +502,29 @@ export function mountHud(root: HTMLElement): HudHandle {
     setText(scoreFps, `${Math.round(fps)} FPS`);
   };
 
+  /** Pinta os slots do command card; só reconstrói o rótulo quando a lista muda. */
+  const paintCommandCard = (actions: readonly CommandAction[]): void => {
+    cmdActions = actions.slice(0, COMMAND_SLOTS);
+    cmdButtons.forEach((btn, index) => {
+      const action = cmdActions[index];
+      if (action === undefined) {
+        btn.disabled = true;
+        btn.textContent = "·";
+        btn.title = "Indisponível";
+        btn.removeAttribute("data-action");
+        return;
+      }
+      btn.disabled = false;
+      btn.textContent = action.label;
+      btn.dataset["action"] = action.id;
+      const hotkeyPart = action.hotkey !== undefined ? ` [${action.hotkey}]` : "";
+      const costPart = action.cost !== undefined ? ` — ${action.cost}` : "";
+      btn.title = `${action.label}${hotkeyPart}${costPart}`;
+    });
+  };
+
   refreshObjectives(undefined);
+  paintCommandCard([]);
 
   return {
     update(snapshot, selectionIds, extra): void {
@@ -532,6 +579,16 @@ export function mountHud(root: HTMLElement): HudHandle {
       refreshObjectives(undefined);
     },
 
+    setCommandActions(actions: readonly CommandAction[], cb: (a: CommandAction) => void): void {
+      if (disposed) return;
+      commandCallback = cb;
+      // Evita churn de DOM: só repinta quando a lista de ações muda.
+      const sig = actions.map((a) => `${a.id}|${a.label}|${a.hotkey ?? ""}|${a.cost ?? ""}`).join(";");
+      if (sig === commandSig) return;
+      commandSig = sig;
+      paintCommandCard(actions);
+    },
+
     onIdleVillagerClick(cb: () => void): void {
       idleCallback = cb;
     },
@@ -543,6 +600,9 @@ export function mountHud(root: HTMLElement): HudHandle {
       created.length = 0;
       scoreRows = [];
       idleCallback = undefined;
+      commandCallback = undefined;
+      cmdActions = [];
+      commandSig = "";
       root.classList.remove("hud-root");
     },
   };
