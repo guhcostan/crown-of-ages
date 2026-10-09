@@ -155,6 +155,10 @@ export interface Entity {
   /** Recurso sendo construído (building em progresso por esta unidade). */
   constructingId?: number;
   buildProgress?: number;
+  /** Id da edificação/muralha onde esta unidade está abrigada (garrison). */
+  garrisonIn?: number;
+  /** true se a unidade (monge) carrega uma relíquia. */
+  carryingRelic?: boolean;
 
   // --- específicos de construção ---
   /** true quando a construção está 100% concluída. */
@@ -164,10 +168,20 @@ export interface Entity {
   popProvided?: number;
   /** Fila de treinamento: tipos em produção com progresso. */
   training?: Array<{ type: string; progress: number; total: number }>;
+  /** Pesquisa em andamento no edifício (ferraria/universidade/mosteiro). */
+  researching?: { techId: string; progress: number; total: number };
   rallyX?: number;
   rallyZ?: number;
   /** Drop-off deste edifício por recurso. */
   dropOff?: Array<"food" | "wood" | "gold" | "stone">;
+  /** Unidades abrigadas (garrison) — ids de unidades dentro desta entidade. */
+  garrison?: number[];
+  /** Número de vagas de garrison (muralhas de pedra: 1+ por segmento; torres: 5). */
+  garrisonSlots?: number;
+  /** Dano de ataque próprio (torres/keep quando guarnecidos ou inatos). */
+  attackDamage?: number;
+  attackRange?: number;
+  attackCooldownMax?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -192,6 +206,14 @@ export interface PlayerState {
   defeated: boolean;
   /** Progresso de vitória (ex.: locais sagrados controlados). */
   score: number;
+  /** Ids de tecnologias já pesquisadas. */
+  techs?: string[];
+  /** Relíquias depositadas no mosteiro (geram ouro). */
+  relics?: number;
+  /** Comida gerada por relic/segundo (cache do tick). */
+  relicGoldPerSec?: number;
+  /** Rotas de comércio ativas do mercado (ids de trader). */
+  traders?: number[];
 }
 
 export type VictoryState =
